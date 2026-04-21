@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_branch,res.branch,model_res_branch,base.group_user,1,1,1,1
+access_bigfix_report_sales,bigfix.report.sales,model_bigfix_report_sales,base.group_user,1,0,0,0
+access_bigfix_report_product_location,bigfix.report.product.location,model_bigfix_report_product_location,base.group_user,1,0,0,0
+access_bigfix_report_stock_sale,bigfix.report.stock.sale,model_bigfix_report_stock_sale,base.group_user,1,0,0,0
+access_bigfix_pharmacy_payment_report,bigfix.pharmacy.payment.report,model_bigfix_pharmacy_payment_report,base.group_user,1,0,0,0

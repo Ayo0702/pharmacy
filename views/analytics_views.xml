@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sales Analysis Views -->
+    <record id="view_bigfix_report_sales_list" model="ir.ui.view">
+        <field name="name">bigfix.report.sales.list</field>
+        <field name="model">bigfix.report.sales</field>
+        <field name="arch" type="xml">
+            <list string="Sales Analysis">
+                <field name="branch_id"/>
+                <field name="date_order"/>
+                <field name="total_orders"/>
+                <field name="total_sales" sum="Total"/>
+                <field name="avg_order_value" avg="Average"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bigfix_report_sales_pivot" model="ir.ui.view">
+        <field name="name">bigfix.report.sales.pivot</field>
+        <field name="model">bigfix.report.sales</field>
+        <field name="arch" type="xml">
+            <pivot string="Sales Analysis" disable_linking="True">
+                <field name="branch_id" type="row"/>
+                <field name="date_order" interval="day" type="col"/>
+                <field name="total_sales" type="measure"/>
+                <field name="total_orders" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_bigfix_report_sales_graph" model="ir.ui.view">
+        <field name="name">bigfix.report.sales.graph</field>
+        <field name="model">bigfix.report.sales</field>
+        <field name="arch" type="xml">
+            <graph string="Sales Analysis" type="bar">
+                <field name="date_order" interval="day"/>
+                <field name="total_sales" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Product Location Views -->
+    <record id="view_bigfix_report_product_location_pivot" model="ir.ui.view">
+        <field name="name">bigfix.report.product.location.pivot</field>
+        <field name="model">bigfix.report.product.location</field>
+        <field name="arch" type="xml">
+            <pivot string="Product Location Analysis" disable_linking="True">
+                <field name="branch_id" type="row"/>
+                <field name="product_id" type="row"/>
+                <field name="period_start" interval="month" type="col"/>
+                <field name="revenue" type="measure"/>
+                <field name="qty_sold" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Stock Sale Views -->
+    <record id="view_bigfix_report_stock_sale_list" model="ir.ui.view">
+        <field name="name">bigfix.report.stock.sale.list</field>
+        <field name="model">bigfix.report.stock.sale</field>
+        <field name="arch" type="xml">
+            <list string="Stock Coverage" decoration-danger="stock_status == 'critical'" decoration-warning="stock_status == 'warning'">
+                <field name="branch_id"/>
+                <field name="product_id"/>
+                <field name="current_stock"/>
+                <field name="avg_daily_sales"/>
+                <field name="days_of_coverage"/>
+                <field name="stock_status" widget="badge" decoration-danger="stock_status == 'critical'" decoration-warning="stock_status == 'warning'" decoration-success="stock_status == 'healthy'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Payment Report Views -->
+    <record id="view_bigfix_report_payments_list" model="ir.ui.view">
+        <field name="name">bigfix.pharmacy.payment.report.list</field>
+        <field name="model">bigfix.pharmacy.payment.report</field>
+        <field name="arch" type="xml">
+            <list string="Payment Analysis">
+                <field name="branch_id"/>
+                <field name="date"/>
+                <field name="payment_category"/>
+                <field name="amount" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bigfix_report_payments_pivot" model="ir.ui.view">
+        <field name="name">bigfix.pharmacy.payment.report.pivot</field>
+        <field name="model">bigfix.pharmacy.payment.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Payment Analysis" disable_linking="True">
+                <field name="branch_id" type="row"/>
+                <field name="payment_category" type="col"/>
+                <field name="date" interval="day" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_bigfix_report_payments_graph" model="ir.ui.view">
+        <field name="name">bigfix.pharmacy.payment.report.graph</field>
+        <field name="model">bigfix.pharmacy.payment.report</field>
+        <field name="arch" type="xml">
+            <graph string="Payment Analysis" type="bar">
+                <field name="date" interval="day"/>
+                <field name="payment_category"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_bigfix_report_sales" model="ir.actions.act_window">
+        <field name="name">Sales Analysis</field>
+        <field name="res_model">bigfix.report.sales</field>
+        <field name="view_mode">pivot,graph,list</field>
+    </record>
+
+    <record id="action_bigfix_report_product_location" model="ir.actions.act_window">
+        <field name="name">Product Location Analysis</field>
+        <field name="res_model">bigfix.report.product.location</field>
+        <field name="view_mode">pivot,graph</field>
+    </record>
+
+    <record id="action_bigfix_report_stock_sale" model="ir.actions.act_window">
+        <field name="name">Stock Coverage Analysis</field>
+        <field name="res_model">bigfix.report.stock.sale</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+
+    <record id="action_bigfix_report_payments" model="ir.actions.act_window">
+        <field name="name">Payment Analysis</field>
+        <field name="res_model">bigfix.pharmacy.payment.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+    </record>
+
+    <!-- Dashboard Action -->
+    <record id="action_bigfix_dashboard" model="ir.actions.client">
+        <field name="name">Pharmacy Dashboard</field>
+        <field name="tag">bigfix_pharmacy_reports.dashboard</field>
+    </record>
+
+    <!-- Spreadsheet Insertion (Simplified via standard Odoo Spreadsheet integration if possible, 
+         or just adding a button if custom logic is needed. 
+         But standard Odoo 18 Pivot already has "Insert in Spreadsheet" in the UI. 
+         However, the user asked to enable Odoo Spreadsheet via inherited action if needed.) -->
+    <record id="action_repair_branch_data" model="ir.actions.server">
+        <field name="name">Repair Pharmacy Branch Data</field>
+        <field name="model_id" ref="point_of_sale.model_pos_order"/>
+        <field name="state">code</field>
+        <field name="code">
+branches = env['res.branch'].search([('pos_config_id', '!=', False)])
+for branch in branches:
+    orders = env['pos.order'].search([
+        ('session_id.config_id', '=', branch.pos_config_id.id),
+        ('branch_id', '=', False)
+    ])
+    if orders:
+        orders.write({'branch_id': branch.id})
+        # Trigger re-generation of report IDs by touching the model if needed, 
+        # but standard Odoo SQL views will pick this up on next refresh.
+        </field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_bigfix_root" name="BigFix Pharmacy" parent="point_of_sale.menu_point_root" sequence="10"/>
+    
+    <menuitem id="menu_bigfix_dashboard" name="Dashboard" parent="menu_bigfix_root" action="action_bigfix_dashboard" sequence="1"/>
+    
+    <menuitem id="menu_bigfix_reports" name="Reports" parent="menu_bigfix_root" sequence="20"/>
+    <menuitem id="menu_bigfix_sales_report" name="Sales Analysis" parent="menu_bigfix_reports" action="action_bigfix_report_sales" sequence="1"/>
+    <menuitem id="menu_bigfix_product_report" name="Product by Location" parent="menu_bigfix_reports" action="action_bigfix_report_product_location" sequence="2"/>
+    <menuitem id="menu_bigfix_stock_report" name="Stock Coverage" parent="menu_bigfix_reports" action="action_bigfix_report_stock_sale" sequence="3"/>
+    <menuitem id="menu_bigfix_payment_report" name="Payment Analysis" parent="menu_bigfix_reports" action="action_bigfix_report_payments" sequence="4"/>
+
+    <menuitem id="menu_bigfix_config" name="Configuration" parent="menu_bigfix_root" sequence="100"/>
+    <menuitem id="menu_bigfix_branches" name="Branches" parent="menu_bigfix_config" action="action_res_branch" sequence="1"/>
+    <menuitem id="menu_bigfix_repair" name="Repair Branch Data" parent="menu_bigfix_config" action="action_repair_branch_data" sequence="99"/>
+</odoo>

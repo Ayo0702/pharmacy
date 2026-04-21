@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_nafdac" model="report.paperformat">
+        <field name="name">NAFDAC Register A4 Landscape</field>
+        <field name="default" eval="True"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">15</field>
+        <field name="margin_bottom">15</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">10</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_nafdac_register" model="ir.actions.report">
+        <field name="name">NAFDAC Controlled Drug Register</field>
+        <field name="model">pos.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">bigfix_pharmacy_reports.report_nafdac_register</field>
+        <field name="report_file">bigfix_pharmacy_reports.report_nafdac_register</field>
+        <field name="print_report_name">'NAFDAC_Register_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_order"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_nafdac"/>
+    </record>
+
+    <template id="report_nafdac_register">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h2>NAFDAC CONTROLLED DRUG REGISTER</h2>
+                                <h4>Branch: <span t-field="o.branch_id.name"/></h4>
+                            </div>
+                        </div>
+
+                        <table class="table table-sm table-bordered mt-4">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Patient Name</th>
+                                    <th>Drug Name</th>
+                                    <th>Batch/Lot</th>
+                                    <th class="text-end">Qty</th>
+                                    <th>UoM</th>
+                                    <th>Doctor</th>
+                                    <th>License No.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.lines.filtered(lambda l: l.product_id.is_controlled)" t-as="line">
+                                    <tr>
+                                        <td><span t-field="o.date_order" t-options='{"widget": "date"}'/></td>
+                                        <td><span t-field="o.partner_id.name"/></td>
+                                        <td><span t-field="line.product_id.name"/></td>
+                                        <td>
+                                            <t t-if="line.pack_lot_ids">
+                                                <t t-foreach="line.pack_lot_ids" t-as="lot">
+                                                    <span t-field="lot.lot_name"/><br/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                        <td class="text-end"><span t-field="line.qty"/></td>
+                                        <td><span t-field="line.product_uom_id.name"/></td>
+                                        <td>
+                                            <!-- Assuming custom fields on pos.order or just using notes for now -->
+                                            <span t-esc="o.note or 'N/A'"/>
+                                        </td>
+                                        <td>
+                                            <!-- License Placeholder -->
+                                            <span>N/A</span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <div class="row mt-5">
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid black; width: 200px; margin: 0 auto;"/>
+                                <p>Pharmacist Signature &amp; Stamp</p>
+                                <p>(PCN Registration No.)</p>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid black; width: 200px; margin: 0 auto;"/>
+                                <p>Branch Manager Signature</p>
+                            </div>
+                        </div>
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

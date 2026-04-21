@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t t-name="bigfix_pharmacy_reports.BigFixDashboard">
+    <div class="o_bigfix_dashboard flex-grow-1 overflow-auto bg-light p-4">
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="fw-bold mb-0 text-dark">Pharmacy Analytics</h1>
+                <p class="text-muted mb-0">Real-time performance metrics</p>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <!-- Branch Selector -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-0"><i class="fa fa-building-o text-primary"></i></span>
+                    <select class="form-select border-0 shadow-sm ps-2 pe-5 btn-filter" 
+                            t-att-value="state.selectedBranch" 
+                            t-on-change="onBranchChange">
+                        <option value="all">All Branches</option>
+                        <t t-foreach="state.branches" t-as="branch" t-key="branch.id">
+                            <option t-att-value="branch.id"><t t-esc="branch.name"/></option>
+                        </t>
+                    </select>
+                </div>
+
+                <!-- Location Selector -->
+                <div class="input-group input-group-sm" t-if="state.selectedBranch !== 'all'">
+                    <span class="input-group-text bg-white border-0"><i class="fa fa-map-marker text-danger"></i></span>
+                    <select class="form-select border-0 shadow-sm ps-2 pe-5 btn-filter" 
+                            t-att-value="state.selectedLocation" 
+                            t-on-change="onLocationChange">
+                        <option value="all">All Locations</option>
+                        <t t-foreach="state.locations" t-as="loc" t-key="loc.id">
+                            <option t-att-value="loc.id"><t t-esc="loc.display_name"/></option>
+                        </t>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary shadow-sm btn-filter px-4" t-on-click="fetchData">
+                    <i class="fa fa-refresh me-2"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Badges -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3" t-on-click="() => this.openReport('bigfix_pharmacy_reports.action_bigfix_report_sales')">
+                <div class="stat-badge bg-gradient-violet shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="opacity-75 mb-1 text-uppercase fw-bold ls-1">Weekly Revenue</small>
+                            <h2 class="fw-bold mb-0 mt-1"><t t-esc="state.recent_sales.reduce((acc, s) => acc + s.total_sales, 0) || 0" t-options='{"widget": "monetary"}'/></h2>
+                        </div>
+                        <div class="badge-icon shadow-sm"><i class="fa fa-money"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3" t-on-click="() => this.openReport('bigfix_pharmacy_reports.action_bigfix_report_product_location')">
+                <div class="stat-badge bg-gradient-emerald shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="opacity-75 mb-1 text-uppercase fw-bold ls-1">Growth Items</small>
+                            <h2 class="fw-bold mb-0 mt-1">+<t t-esc="state.top_products.length || 0"/></h2>
+                        </div>
+                        <div class="badge-icon shadow-sm"><i class="fa fa-line-chart"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3" t-on-click="() => this.openReport('bigfix_pharmacy_reports.action_bigfix_report_stock_sale')">
+                <div class="stat-badge bg-gradient-amber shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="opacity-75 mb-1 text-uppercase fw-bold ls-1">Critical Stock</small>
+                            <h2 class="fw-bold mb-0 mt-1"><t t-esc="state.stock_coverage.filter(s => s.current_stock &lt; 5).length"/> Alerts</h2>
+                        </div>
+                        <div class="badge-icon shadow-sm"><i class="fa fa-warning"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3" t-on-click="() => this.openReport('bigfix_pharmacy_reports.action_bigfix_report_sales')">
+                <div class="stat-badge bg-gradient-cyan shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="opacity-75 mb-1 text-uppercase fw-bold ls-1">Total Orders</small>
+                            <h2 class="fw-bold mb-0 mt-1"><t t-esc="state.recent_sales.reduce((acc, s) => acc + s.total_orders, 0) || 0"/> Items</h2>
+                        </div>
+                        <div class="badge-icon shadow-sm"><i class="fa fa-shopping-basket"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Performance Comparison (Visible only in All Branches mode) -->
+        <div class="row g-4 mb-5" t-if="state.selectedBranch === 'all'">
+            <div class="col-md-12">
+                <div class="card glass-card p-4 border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Branch Performance Comparison</h5>
+                        <span class="badge bg-soft-primary text-primary px-3 rounded-pill">Consolidated View</span>
+                    </div>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas t-ref="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Analytics Grid -->
+        <div class="row g-4 mb-5">
+            <!-- Revenue Trend Chart -->
+            <div class="col-md-8">
+                <div class="card glass-card h-100 p-4 border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Revenue Trend (Last 7 Days)</h5>
+                        <i class="fa fa-line-chart text-muted"></i>
+                    </div>
+                    <div class="chart-container">
+                        <canvas t-ref="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Payment Mix Chart -->
+            <div class="col-md-4">
+                <div class="card glass-card h-100 p-4 border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Payment Mix</h5>
+                        <i class="fa fa-pie-chart text-muted"></i>
+                    </div>
+                    <div class="chart-container position-relative">
+                        <canvas t-ref="paymentChart"></canvas>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center mt-3">
+                            <h4 class="mb-0 fw-bold"><t t-esc="Math.round(state.payment_breakdown.reduce((acc, p) => acc + p.amount, 0) || 0)" t-options='{"widget": "monetary"}'/></h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Top Performing Products -->
+            <div class="col-md-6">
+                <div class="card glass-card h-100 p-4 border-0">
+                    <h5 class="fw-bold mb-4">Top Performing Products</h5>
+                    <div class="table-responsive">
+                        <table class="table table-premium mb-0">
+                            <thead>
+                                <tr class="text-muted border-0">
+                                    <th class="ps-0 border-0">Product</th>
+                                    <th class="text-center border-0">Sold</th>
+                                    <th class="text-end pe-0 border-0">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.top_products" t-as="item" t-key="item.id">
+                                    <tr class="align-middle">
+                                        <td class="ps-0 border-0 text-dark fw-bold"><t t-esc="item.product_id[1]"/></td>
+                                        <td class="text-center border-0">
+                                            <span class="badge bg-light text-dark rounded-pill px-3"><t t-esc="item.qty_sold"/></span>
+                                        </td>
+                                        <td class="text-end pe-0 border-0 text-primary fw-bold"><t t-esc="item.revenue" t-options='{"widget": "monetary"}'/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Inventory Level Comparison -->
+            <div class="col-md-6">
+                <div class="card glass-card h-100 p-4 border-0">
+                    <h5 class="fw-bold mb-4">Inventory Level Comparison</h5>
+                    <div class="chart-container">
+                        <canvas t-ref="inventoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
