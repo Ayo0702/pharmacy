@@ -10,7 +10,7 @@
         - NAFDAC Controlled Drug PDF Reports.
         - HMO Split-Billing for POS orders.
     """,
-    'author': 'BigFix',
+    'author': 'BigFix', 'Ayo'
     'website': 'https://www.bigfix.com',
     'depends': [
         'point_of_sale',
